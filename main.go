@@ -3,9 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func init() {
@@ -16,27 +18,45 @@ func printUsage() {
 	fmt.Println("Usage: serendwiki <input-directory> <output-directory>")
 }
 
-func gatherFilesWithExt(inputDir string, ext string) []string {
-	matches, err := filepath.Glob(inputDir + "/*." + ext)
-	if err != nil {
-		log.Fatalf("Error while searching for markdown files: %s", err)
+func isWikiFile(fileName string) bool {
+	if strings.Contains(fileName, ".") {
+		return false
 	}
-	return matches
+
+	return true
 }
 
-func gatherFiles(inputDir string) []string {
-	var matches []string
-
-	matches = gatherFilesWithExt(inputDir, "[Mm][Dd]")
-	matches = append(matches, gatherFilesWithExt(inputDir, "[Mm][Kk][Dd]")...)
-	matches = append(matches, gatherFilesWithExt(inputDir, "[Mm][Kk][Dd][Nn]")...)
-	matches = append(matches, gatherFilesWithExt(inputDir, "[Mm][Aa][Rr][Kk][Dd][Oo][Ww][Nn]")...)
-
-	if len(matches) == 0 {
-		log.Fatalf("No markdown files (*.md, *.mkd, *.mkdn, *.markdown) found in %s", inputDir)
+func isHiddenFile(fileName string) bool {
+	if strings.HasPrefix(fileName, ".") {
+		return true
 	}
 
-	return matches
+	return false
+}
+
+func gatherWikiFiles(inputDir string) []string {
+	var wikiFiles []string
+
+	fileInfos, err := ioutil.ReadDir(inputDir)
+	if err != nil {
+		log.Fatalf("Error while reading input directory: %s", err)
+	}
+
+	for _, fi := range fileInfos {
+		if fi.IsDir() {
+			continue
+		}
+
+		if isWikiFile(fi.Name()) {
+			wikiFiles = append(wikiFiles, fi.Name())
+		}
+	}
+
+	if len(wikiFiles) == 0 {
+		log.Fatalf("No wiki files (files without extension) found in %s", inputDir)
+	}
+
+	return wikiFiles
 }
 
 func checkForErrors(inputDir string, outputDir string) {
@@ -69,6 +89,8 @@ func main() {
 		log.Fatalf("Error: could not create output directory. Reason: %s", err)
 	}
 
-	fileList := gatherFiles(inputDir)
+	fileList := gatherWikiFiles(inputDir)
 	fmt.Println(fileList)
+
+	// TODO: Copy all files that are not wiki files from the input directory to the output directory (except '.git', etc.)
 }
