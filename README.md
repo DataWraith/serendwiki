@@ -33,11 +33,8 @@ TODO
 - Add some markdown files to `~/wiki/`
 - `serendwiki $HOME/wiki/ $HOME/wiki-out/`
 
-WARNING: Be careful when specifying the output directory. `serendwiki` will
-overwrite files in `wiki-out` if they have the same name as a generated article.
-This is useful for regenerating the wiki, but you probably should not give it
-e.g. your home directory.
-
+NOTE: `serendwiki` will refuse to run if the `wiki-out` directory already exists
+in order to avoid overwriting existing files.
 
 ## Options
 
