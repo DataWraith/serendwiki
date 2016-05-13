@@ -8,12 +8,12 @@ import (
 	"path/filepath"
 )
 
-func printUsage() {
-	fmt.Println("Usage: serendwiki <input-directory> <output-directory>")
-}
-
 func init() {
 	flag.Parse()
+}
+
+func printUsage() {
+	fmt.Println("Usage: serendwiki <input-directory> <output-directory>")
 }
 
 func gatherFilesWithExt(inputDir string, ext string) []string {
