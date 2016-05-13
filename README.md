@@ -36,14 +36,6 @@ TODO
 NOTE: `serendwiki` will refuse to run if the `wiki-out` directory already exists
 in order to avoid overwriting existing files.
 
-## Options
-
-`serendwiki` takes several options:
-
-| Option             | Default  | Effect                                                |
-| ------------------ | :------: | ----------------------------------------------------- |
-| `--min-link-len`   | 3        | Don't link short article titles (e.g. single letters) |
-| `--reverse-links`  | true     | Do/do not generate a "what links here" section        |
 
 ## License
 
