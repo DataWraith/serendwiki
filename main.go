@@ -39,6 +39,19 @@ func gatherFiles(inputDir string) []string {
 	return matches
 }
 
+func checkForErrors(inputDir string, outputDir string) {
+	if _, err := os.Stat(inputDir); err != nil {
+		if os.IsNotExist(err) {
+			log.Fatalf("Input directory '%s' does not exist.", inputDir)
+		}
+		log.Fatalf("Error while opening input directory '%s': %s", inputDir, err)
+	}
+
+	if _, err := os.Stat(outputDir); !os.IsNotExist(err) {
+		log.Fatalf("Refusing to overwrite exisitng directory '%s'", outputDir)
+	}
+}
+
 func main() {
 	if len(flag.Args()) < 2 {
 		printUsage()
@@ -48,10 +61,9 @@ func main() {
 	inputDir := filepath.Clean(flag.Args()[0])
 	outputDir := filepath.Clean(flag.Args()[1])
 
-	if _, err := os.Stat(outputDir); !os.IsNotExist(err) {
-		log.Fatalf("Refusing to overwrite exisitng directory '%s'", outputDir)
-	}
+	checkForErrors(inputDir, outputDir)
 
+	// Create output directory
 	err := os.Mkdir(outputDir, 0644)
 	if err != nil {
 		log.Fatalf("Error: could not create output directory. Reason: %s", err)
