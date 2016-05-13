@@ -18,10 +18,8 @@ within your wiki.
 
 ## Inspiration
 
-Serendwiki was largely inspired by the Vim plugin
-[VimBoy](https://morr.cc/keeping-a-personal-wiki/). It is the only plugin I miss
-after switching to [Spacemacs](https://spacemacs.org), so I set out to replace
-it.
+Serendwiki was inspired by, and is compatible to, the Vim plugin
+[VimBoy](https://morr.cc/keeping-a-personal-wiki/).
 
 
 ## Quickstart
