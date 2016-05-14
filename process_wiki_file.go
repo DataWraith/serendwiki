@@ -53,6 +53,10 @@ func removeOverlap(input []*goahocorasick.Term) []term {
 		terms = append(terms, term{Word: t.Word, Pos: t.Pos})
 	}
 
+	if len(input) < 2 {
+		return terms
+	}
+
 	sort.Sort(ByLength(terms))
 
 	for i := range terms {
@@ -66,21 +70,18 @@ func removeOverlap(input []*goahocorasick.Term) []term {
 	i := 0
 	j := 1
 
-	if len(input) < 2 {
-		return terms
-	}
+	for i < len(input) {
+		if j >= len(input) {
+			result = append(result, terms[i])
+			break
+		}
 
-	appendLast := false
-	for j < len(input) {
 		if terms[i].Pos+len(terms[i].Word) < terms[j].Pos {
 			result = append(result, terms[i])
-			appendLast = false
 			i = j
 			j++
 			continue
 		}
-
-		appendLast = true
 
 		if terms[i].Priority < terms[j].Priority {
 			j++
@@ -88,10 +89,6 @@ func removeOverlap(input []*goahocorasick.Term) []term {
 			i = j
 			j++
 		}
-	}
-
-	if appendLast {
-		result = append(result, terms[i])
 	}
 
 	return result
@@ -106,7 +103,7 @@ func linkifyText(input []byte, recognizer goahocorasick.Machine, linkTable map[s
 
 	searchResults := recognizer.MultiPatternSearch(rinput_lower, false)
 	terms := removeOverlap(searchResults)
-	terms = append(terms, term{Pos: len(rinput), Word: []rune{}, Priority: ^0})
+	terms = append(terms, term{Pos: len(rinput), Word: []rune{}, Priority: 1 << 30})
 
 	curTerm := 0
 	rresult := []rune{}
