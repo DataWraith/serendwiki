@@ -95,31 +95,31 @@ func removeOverlap(input []*goahocorasick.Term) []term {
 }
 
 func linkifyText(input []byte, recognizer goahocorasick.Machine, linkTable map[string]string) []byte {
-	rinput := bytes.Runes(input)
-	rinput_lower := make([]rune, 0, len(rinput))
-	for i := 0; i < len(rinput); i++ {
-		rinput_lower = append(rinput_lower, unicode.ToLower(rinput[i]))
+	rInput := bytes.Runes(input)
+	rInputLower := make([]rune, 0, len(rInput))
+	for i := 0; i < len(rInput); i++ {
+		rInputLower = append(rInputLower, unicode.ToLower(rInput[i]))
 	}
 
-	searchResults := recognizer.MultiPatternSearch(rinput_lower, false)
+	searchResults := recognizer.MultiPatternSearch(rInputLower, false)
 	terms := removeOverlap(searchResults)
-	terms = append(terms, term{Pos: len(rinput), Word: []rune{}, Priority: 1 << 30})
+	terms = append(terms, term{Pos: len(rInput), Word: []rune{}, Priority: 1 << 30})
 
 	curTerm := 0
 	rresult := []rune{}
 
 	i := 0
-	for i < len(rinput) {
+	for i < len(rInput) {
 		if i < terms[curTerm].Pos {
-			rresult = append(rresult, rinput[i])
+			rresult = append(rresult, rInput[i])
 			i++
 			continue
 		}
 
 		rresult = append(rresult, []rune("<a href=\"")...)
-		rresult = append(rresult, []rune(linkTable[strings.ToLower(string(rinput[i:i+len(terms[curTerm].Word)]))])...)
+		rresult = append(rresult, []rune(linkTable[strings.ToLower(string(rInput[i:i+len(terms[curTerm].Word)]))])...)
 		rresult = append(rresult, []rune(".html\">")...)
-		rresult = append(rresult, rinput[i:i+len(terms[curTerm].Word)]...)
+		rresult = append(rresult, rInput[i:i+len(terms[curTerm].Word)]...)
 		rresult = append(rresult, []rune("</a>")...)
 
 		i += len(terms[curTerm].Word)
@@ -129,8 +129,8 @@ func linkifyText(input []byte, recognizer goahocorasick.Machine, linkTable map[s
 	return []byte(string(rresult))
 }
 
-func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine, linkTable map[string]string) []byte {
-	z := html.NewTokenizer(bytes.NewReader(inputHtml))
+func linkArticles(inputHTML []byte, recognizer goahocorasick.Machine, linkTable map[string]string) []byte {
+	z := html.NewTokenizer(bytes.NewReader(inputHTML))
 	result := []byte{}
 
 	insideLinkTag := false
