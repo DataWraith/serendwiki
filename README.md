@@ -18,8 +18,8 @@ within your wiki.
 
 ## Inspiration
 
-Serendwiki was inspired by, and is compatible to, the Vim plugin
-[VimBoy](https://morr.cc/keeping-a-personal-wiki/)'s auto-link mode.
+Serendwiki was inspired by the Vim plugin
+[VimBoy](https://morr.cc/keeping-a-personal-wiki/).
 
 
 ## Quickstart
