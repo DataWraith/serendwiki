@@ -29,16 +29,16 @@ type term struct {
 	Priority int
 }
 
-type ByLength []term
-type ByPos []term
+type byLength []term
+type byPos []term
 
-func (t ByPos) Len() int           { return len(t) }
-func (t ByPos) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
-func (t ByPos) Less(i, j int) bool { return t[i].Pos < t[j].Pos }
+func (t byPos) Len() int           { return len(t) }
+func (t byPos) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
+func (t byPos) Less(i, j int) bool { return t[i].Pos < t[j].Pos }
 
-func (t ByLength) Len() int           { return len(t) }
-func (t ByLength) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
-func (t ByLength) Less(i, j int) bool { return len(t[i].Word) > len(t[j].Word) }
+func (t byLength) Len() int           { return len(t) }
+func (t byLength) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
+func (t byLength) Less(i, j int) bool { return len(t[i].Word) > len(t[j].Word) }
 
 var tmpl *template.Template
 
@@ -57,13 +57,13 @@ func removeOverlap(input []*goahocorasick.Term) []term {
 		return terms
 	}
 
-	sort.Sort(ByLength(terms))
+	sort.Sort(byLength(terms))
 
 	for i := range terms {
 		terms[i].Priority = i
 	}
 
-	sort.Sort(ByPos(terms))
+	sort.Sort(byPos(terms))
 
 	result := make([]term, 0, len(input))
 
