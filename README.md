@@ -26,7 +26,8 @@ Serendwiki was inspired by, and is compatible to, the Vim plugin
 
 ### Installation
 
-TODO
+- Install [golang](https://golang.org)
+- `go get -u -v github.com/DataWraith/serendwiki`
 
 ### Creating a Wiki
 
