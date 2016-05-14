@@ -8,6 +8,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/anknown/ahocorasick"
+	"github.com/termie/go-shutil"
 )
 
 func init() {
@@ -72,6 +75,49 @@ func checkForErrors(inputDir string, outputDir string) {
 	}
 }
 
+func buildArticleMachine(fileList []string) goahocorasick.Machine {
+	var (
+		dict    [][]rune
+		machine goahocorasick.Machine
+	)
+
+	for _, fn := range fileList {
+		dict = append(dict, []rune(strings.ToLower(strings.TrimSpace(fn))))
+	}
+
+	if err := machine.Build(dict); err != nil {
+		log.Fatalf("Error while building article recognizer: %s", err)
+	}
+
+	return machine
+}
+
+func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Machine) int {
+	var numArticles int
+
+	fileInfos, err := ioutil.ReadDir(inputDir)
+	if err != nil {
+		log.Fatalf("Error while reading input directory: %s", err)
+	}
+
+	for _, fi := range fileInfos {
+		if isHiddenFile(fi.Name()) {
+			continue
+		}
+
+		if fi.IsDir() {
+			shutil.CopyTree(filepath.Join(inputDir, fi.Name()), filepath.Join(outputDir, fi.Name()), &CopyTreeOptions{Symlinks: true, Ignore: nil, CopyFunction: shutil.Copy, IgnoreDanglingSymlinks: true})
+			continue
+		}
+
+		if !isWikiFile(fi.Name()) {
+			shutil.Copy(filepath.Join(inputDir, fi.Name()), outputDir, false)
+		}
+
+		processWikiFile(inputDir, outputDir, fi.Name(), recognizer)
+	}
+}
+
 func main() {
 	if len(flag.Args()) != 2 {
 		printUsage()
@@ -90,7 +136,9 @@ func main() {
 	}
 
 	fileList := gatherWikiFiles(inputDir)
-	fmt.Println(fileList)
+	recognizer := buildArticleMachine(fileList)
 
-	// TODO: Copy all files that are not wiki files from the input directory to the output directory (except '.git', etc.)
+	numArticles := processFiles(inputDir, outputDir, recognizer)
+
+	fmt.Printf("Done processing wiki '%s', %d articles converted to HTML.\n", inputDir, numArticles)
 }
