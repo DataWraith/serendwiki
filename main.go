@@ -73,7 +73,7 @@ func checkForErrors(inputDir string, outputDir string) {
 }
 
 func main() {
-	if len(flag.Args()) < 2 {
+	if len(flag.Args()) != 2 {
 		printUsage()
 		os.Exit(1)
 	}
