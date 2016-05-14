@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"text/template"
 	"unicode"
 
@@ -96,7 +97,7 @@ func removeOverlap(input []*goahocorasick.Term) []term {
 	return result
 }
 
-func linkifyText(input []byte, recognizer goahocorasick.Machine) []byte {
+func linkifyText(input []byte, recognizer goahocorasick.Machine, linkTable map[string]string) []byte {
 	rinput := bytes.Runes(input)
 	rinput_lower := make([]rune, 0, len(rinput))
 	for i := 0; i < len(rinput); i++ {
@@ -119,7 +120,7 @@ func linkifyText(input []byte, recognizer goahocorasick.Machine) []byte {
 		}
 
 		rresult = append(rresult, []rune("<a href=\"")...)
-		rresult = append(rresult, rinput[i:i+len(terms[curTerm].Word)]...)
+		rresult = append(rresult, []rune(linkTable[strings.ToLower(string(rinput[i:i+len(terms[curTerm].Word)]))])...)
 		rresult = append(rresult, []rune(".html\">")...)
 		rresult = append(rresult, rinput[i:i+len(terms[curTerm].Word)]...)
 		rresult = append(rresult, []rune("</a>")...)
@@ -131,7 +132,7 @@ func linkifyText(input []byte, recognizer goahocorasick.Machine) []byte {
 	return []byte(string(rresult))
 }
 
-func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine) []byte {
+func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine, linkTable map[string]string) []byte {
 	z := html.NewTokenizer(bytes.NewReader(inputHtml))
 	result := []byte{}
 
@@ -148,7 +149,7 @@ func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine) []byte {
 
 		case html.TextToken:
 			if !insideLinkTag {
-				result = append(result, linkifyText(z.Text(), recognizer)...)
+				result = append(result, linkifyText(z.Text(), recognizer, linkTable)...)
 			} else {
 				result = append(result, z.Raw()...)
 			}
@@ -173,14 +174,14 @@ func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine) []byte {
 	}
 }
 
-func processWikiFile(inputDir string, outputDir string, fileName string, mode os.FileMode, recognizer goahocorasick.Machine) {
+func processWikiFile(inputDir string, outputDir string, fileName string, mode os.FileMode, recognizer goahocorasick.Machine, linkTable map[string]string) {
 	contents, err := ioutil.ReadFile(filepath.Join(inputDir, fileName))
 	if err != nil {
 		log.Fatalf("Error while reading '%s': %s", fileName, err)
 	}
 
 	output := blackfriday.MarkdownCommon(contents)
-	linked := linkArticles(output, recognizer)
+	linked := linkArticles(output, recognizer, linkTable)
 	safe := bluemonday.UGCPolicy().SanitizeBytes(linked)
 
 	outPath := filepath.Join(outputDir, fileName+".html")

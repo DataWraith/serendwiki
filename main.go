@@ -73,6 +73,20 @@ func checkForErrors(inputDir string, outputDir string) {
 	if _, err := os.Stat(outputDir); !os.IsNotExist(err) {
 		log.Fatalf("Refusing to overwrite exisitng directory '%s'", outputDir)
 	}
+
+	inputAbs, err := filepath.Abs(inputDir)
+	if err != nil {
+		log.Fatalf("Could not determine absolute path of input directory")
+	}
+
+	outputAbs, err := filepath.Abs(outputDir)
+	if err != nil {
+		log.Fatalf("Could not determine absolute path of output directory")
+	}
+
+	if strings.HasPrefix(outputAbs, inputAbs) {
+		log.Fatalf("Output directory cannot be inside input directory (infinite recursion)")
+	}
 }
 
 func buildArticleMachine(fileList []string) goahocorasick.Machine {
@@ -92,7 +106,7 @@ func buildArticleMachine(fileList []string) goahocorasick.Machine {
 	return machine
 }
 
-func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Machine) int {
+func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Machine, linkTable map[string]string) int {
 	var numArticles int
 
 	copyOptions := &shutil.CopyTreeOptions{
@@ -122,11 +136,21 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 			continue
 		}
 
-		processWikiFile(inputDir, outputDir, fi.Name(), fi.Mode(), recognizer)
+		processWikiFile(inputDir, outputDir, fi.Name(), fi.Mode(), recognizer, linkTable)
 		numArticles++
 	}
 
 	return numArticles
+}
+
+func generateLinkTable(fileList []string) map[string]string {
+	result := make(map[string]string)
+
+	for _, fn := range fileList {
+		result[strings.ToLower(fn)] = fn
+	}
+
+	return result
 }
 
 func main() {
@@ -147,9 +171,10 @@ func main() {
 	}
 
 	fileList := gatherWikiFiles(inputDir)
+	linkTable := generateLinkTable(fileList)
 	recognizer := buildArticleMachine(fileList)
 
-	numArticles := processFiles(inputDir, outputDir, recognizer)
+	numArticles := processFiles(inputDir, outputDir, recognizer, linkTable)
 
 	fmt.Printf("Done processing wiki '%s', %d articles converted to HTML.\n", inputDir, numArticles)
 }
