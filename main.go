@@ -119,6 +119,7 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 
 		if !isWikiFile(fi.Name()) {
 			shutil.Copy(filepath.Join(inputDir, fi.Name()), outputDir, false)
+			continue
 		}
 
 		processWikiFile(inputDir, outputDir, fi.Name(), recognizer)
