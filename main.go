@@ -122,8 +122,11 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 			continue
 		}
 
-		processWikiFile(inputDir, outputDir, fi.Name(), recognizer)
+		processWikiFile(inputDir, outputDir, fi.Name(), fi.Mode(), recognizer)
+		numArticles++
 	}
+
+	return numArticles
 }
 
 func main() {
