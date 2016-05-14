@@ -1,29 +1,23 @@
 package main
 
 import (
-	"text/template"
+	"bytes"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
+	"text/template"
 
 	"github.com/anknown/ahocorasick"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/russross/blackfriday"
+
+	"golang.org/x/net/html"
 )
 
 const (
-	defaultTemplate = `
-		<!DOCTYPE html>
-		<html>
-			<head>
-				<meta charset="utf-8">
-			</head>
-			<body>
-				{{.}}
-			</body>
-		</html>
-	`
+	defaultTemplate = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{{.}}</body></html> `
 )
 
 var tmpl *template.Template
@@ -32,8 +26,30 @@ func init() {
 	tmpl = template.Must(template.New("article").Parse(defaultTemplate))
 }
 
+func linkifyText(input []byte) []byte {
+	return input
+}
+
 func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine) []byte {
-	return inputHtml
+	z := html.NewTokenizer(bytes.NewReader(inputHtml))
+	result := []byte{}
+
+	for {
+		tt := z.Next()
+		switch tt {
+		case html.ErrorToken:
+			if z.Err() == io.EOF {
+				return result
+			}
+			log.Fatalf("Error while parsing generated HTML: %s", z.Err())
+
+		case html.TextToken:
+			result = append(result, linkifyText(z.Text())...)
+
+		default:
+			result = append(result, z.Raw()...)
+		}
+	}
 }
 
 func processWikiFile(inputDir string, outputDir string, fileName string, mode os.FileMode, recognizer goahocorasick.Machine) {
