@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"text/template"
+	"unicode"
 
 	"github.com/anknown/ahocorasick"
 	"github.com/microcosm-cc/bluemonday"
@@ -26,8 +27,43 @@ func init() {
 	tmpl = template.Must(template.New("article").Parse(defaultTemplate))
 }
 
-func linkifyText(input []byte) []byte {
+func removeOverlap(input []*goahocorasick.Term) []*goahocorasick.Term {
 	return input
+}
+
+func linkifyText(input []byte, recognizer goahocorasick.Machine) []byte {
+	rinput := bytes.Runes(input)
+	rinput_lower := make([]rune, 0, len(rinput))
+	for i := 0; i < len(rinput); i++ {
+		rinput_lower = append(rinput_lower, unicode.ToLower(rinput[i]))
+	}
+
+	terms := recognizer.MultiPatternSearch(rinput_lower, false)
+	terms = removeOverlap(terms)
+	terms = append(terms, &goahocorasick.Term{Pos: len(rinput), Word: []rune{}})
+
+	curTerm := 0
+	rresult := []rune{}
+
+	i := 0
+	for i < len(rinput) {
+		if i < terms[curTerm].Pos {
+			rresult = append(rresult, rinput[i])
+			i++
+			continue
+		}
+
+		rresult = append(rresult, []rune("<a href=\"")...)
+		rresult = append(rresult, rinput[i:i+len(terms[curTerm].Word)]...)
+		rresult = append(rresult, []rune(".html\">")...)
+		rresult = append(rresult, rinput[i:i+len(terms[curTerm].Word)]...)
+		rresult = append(rresult, []rune("</a>")...)
+
+		i += len(terms[curTerm].Word)
+		curTerm++
+	}
+
+	return []byte(string(rresult))
 }
 
 func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine) []byte {
@@ -44,7 +80,7 @@ func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine) []byte {
 			log.Fatalf("Error while parsing generated HTML: %s", z.Err())
 
 		case html.TextToken:
-			result = append(result, linkifyText(z.Text())...)
+			result = append(result, linkifyText(z.Text(), recognizer)...)
 
 		default:
 			result = append(result, z.Raw()...)
