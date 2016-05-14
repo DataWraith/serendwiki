@@ -22,19 +22,11 @@ func printUsage() {
 }
 
 func isWikiFile(fileName string) bool {
-	if strings.Contains(fileName, ".") {
-		return false
-	}
-
-	return true
+	return !strings.Contains(fileName, ".")
 }
 
 func isHiddenFile(fileName string) bool {
-	if strings.HasPrefix(fileName, ".") {
-		return true
-	}
-
-	return false
+	return strings.HasPrefix(fileName, ".")
 }
 
 func gatherWikiFiles(inputDir string) []string {
