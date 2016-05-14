@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"text/template"
 	"unicode"
 
@@ -21,14 +22,78 @@ const (
 	defaultTemplate = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>{{.}}</body></html> `
 )
 
+type term struct {
+	Word     []rune
+	Pos      int
+	Priority int
+}
+
+type ByLength []term
+type ByPos []term
+
+func (t ByPos) Len() int           { return len(t) }
+func (t ByPos) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
+func (t ByPos) Less(i, j int) bool { return t[i].Pos < t[j].Pos }
+
+func (t ByLength) Len() int           { return len(t) }
+func (t ByLength) Swap(i, j int)      { t[i], t[j] = t[j], t[i] }
+func (t ByLength) Less(i, j int) bool { return len(t[i].Word) > len(t[j].Word) }
+
 var tmpl *template.Template
 
 func init() {
 	tmpl = template.Must(template.New("article").Parse(defaultTemplate))
 }
 
-func removeOverlap(input []*goahocorasick.Term) []*goahocorasick.Term {
-	return input
+func removeOverlap(input []*goahocorasick.Term) []term {
+	terms := make([]term, 0, len(input))
+
+	for _, t := range input {
+		terms = append(terms, term{Word: t.Word, Pos: t.Pos})
+	}
+
+	sort.Sort(ByLength(terms))
+
+	for i := range terms {
+		terms[i].Priority = i
+	}
+
+	sort.Sort(ByPos(terms))
+
+	result := make([]term, 0, len(input))
+
+	i := 0
+	j := 1
+
+	if len(input) < 2 {
+		return terms
+	}
+
+	appendLast := false
+	for j < len(input) {
+		if terms[i].Pos+len(terms[i].Word) < terms[j].Pos {
+			result = append(result, terms[i])
+			appendLast = false
+			i = j
+			j++
+			continue
+		}
+
+		appendLast = true
+
+		if terms[i].Priority < terms[j].Priority {
+			j++
+		} else {
+			i = j
+			j++
+		}
+	}
+
+	if appendLast {
+		result = append(result, terms[i])
+	}
+
+	return result
 }
 
 func linkifyText(input []byte, recognizer goahocorasick.Machine) []byte {
@@ -38,9 +103,9 @@ func linkifyText(input []byte, recognizer goahocorasick.Machine) []byte {
 		rinput_lower = append(rinput_lower, unicode.ToLower(rinput[i]))
 	}
 
-	terms := recognizer.MultiPatternSearch(rinput_lower, false)
-	terms = removeOverlap(terms)
-	terms = append(terms, &goahocorasick.Term{Pos: len(rinput), Word: []rune{}})
+	searchResults := recognizer.MultiPatternSearch(rinput_lower, false)
+	terms := removeOverlap(searchResults)
+	terms = append(terms, term{Pos: len(rinput), Word: []rune{}, Priority: ^0})
 
 	curTerm := 0
 	rresult := []rune{}
