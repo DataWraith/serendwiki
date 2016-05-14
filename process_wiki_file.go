@@ -76,7 +76,7 @@ func removeOverlap(input []*goahocorasick.Term) []term {
 			break
 		}
 
-		if terms[i].Pos+len(terms[i].Word) < terms[j].Pos {
+		if terms[i].Pos+len(terms[i].Word) <= terms[j].Pos {
 			result = append(result, terms[i])
 			i = j
 			j++
