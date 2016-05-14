@@ -73,20 +73,6 @@ func checkForErrors(inputDir string, outputDir string) {
 	if _, err := os.Stat(outputDir); !os.IsNotExist(err) {
 		log.Fatalf("Refusing to overwrite exisitng directory '%s'", outputDir)
 	}
-
-	inputAbs, err := filepath.Abs(inputDir)
-	if err != nil {
-		log.Fatalf("Could not determine absolute path of input directory")
-	}
-
-	outputAbs, err := filepath.Abs(outputDir)
-	if err != nil {
-		log.Fatalf("Could not determine absolute path of output directory")
-	}
-
-	if strings.HasPrefix(outputAbs, inputAbs) {
-		log.Fatalf("Output directory cannot be inside input directory (infinite recursion)")
-	}
 }
 
 func buildArticleMachine(fileList []string) goahocorasick.Machine {
@@ -127,6 +113,11 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 		}
 
 		if fi.IsDir() {
+			// Skip the output directory if it is inside the input directory
+			if filepath.Join(inputDir, fi.Name()) == outputDir {
+				continue
+			}
+
 			shutil.CopyTree(filepath.Join(inputDir, fi.Name()), filepath.Join(outputDir, fi.Name()), copyOptions)
 			continue
 		}
