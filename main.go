@@ -21,39 +21,6 @@ func printUsage() {
 	fmt.Println("Usage: serendwiki <input-directory> <output-directory>")
 }
 
-func isWikiFile(fileName string) bool {
-	return !strings.Contains(fileName, ".")
-}
-
-func isHiddenFile(fileName string) bool {
-	return strings.HasPrefix(fileName, ".")
-}
-
-func gatherWikiFiles(inputDir string) []string {
-	var wikiFiles []string
-
-	fileInfos, err := ioutil.ReadDir(inputDir)
-	if err != nil {
-		log.Fatalf("Error while reading input directory: %s", err)
-	}
-
-	for _, fi := range fileInfos {
-		if fi.IsDir() {
-			continue
-		}
-
-		if isWikiFile(fi.Name()) {
-			wikiFiles = append(wikiFiles, fi.Name())
-		}
-	}
-
-	if len(wikiFiles) == 0 {
-		log.Fatalf("No wiki files (files without extension) found in %s", inputDir)
-	}
-
-	return wikiFiles
-}
-
 func checkForErrors(inputDir string, outputDir string) {
 	if _, err := os.Stat(inputDir); err != nil {
 		if os.IsNotExist(err) {
@@ -65,6 +32,16 @@ func checkForErrors(inputDir string, outputDir string) {
 	if _, err := os.Stat(outputDir); !os.IsNotExist(err) {
 		log.Fatalf("Refusing to overwrite exisitng directory '%s'", outputDir)
 	}
+}
+
+func generateLinkTable(fileList []string) map[string]string {
+	result := make(map[string]string)
+
+	for _, fn := range fileList {
+		result[strings.ToLower(fn)] = fn
+	}
+
+	return result
 }
 
 func buildArticleMachine(fileList []string) goahocorasick.Machine {
@@ -130,16 +107,6 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 	}
 
 	return numArticles
-}
-
-func generateLinkTable(fileList []string) map[string]string {
-	result := make(map[string]string)
-
-	for _, fn := range fileList {
-		result[strings.ToLower(fn)] = fn
-	}
-
-	return result
 }
 
 func main() {
