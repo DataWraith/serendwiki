@@ -95,6 +95,13 @@ func buildArticleMachine(fileList []string) goahocorasick.Machine {
 func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Machine) int {
 	var numArticles int
 
+	copyOptions := &shutil.CopyTreeOptions{
+		Symlinks:               true,
+		Ignore:                 nil,
+		CopyFunction:           shutil.Copy,
+		IgnoreDanglingSymlinks: true,
+	}
+
 	fileInfos, err := ioutil.ReadDir(inputDir)
 	if err != nil {
 		log.Fatalf("Error while reading input directory: %s", err)
@@ -106,7 +113,7 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 		}
 
 		if fi.IsDir() {
-			shutil.CopyTree(filepath.Join(inputDir, fi.Name()), filepath.Join(outputDir, fi.Name()), &CopyTreeOptions{Symlinks: true, Ignore: nil, CopyFunction: shutil.Copy, IgnoreDanglingSymlinks: true})
+			shutil.CopyTree(filepath.Join(inputDir, fi.Name()), filepath.Join(outputDir, fi.Name()), copyOptions)
 			continue
 		}
 
