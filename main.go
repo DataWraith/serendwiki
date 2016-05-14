@@ -84,7 +84,7 @@ func main() {
 	checkForErrors(inputDir, outputDir)
 
 	// Create output directory
-	err := os.Mkdir(outputDir, 0644)
+	err := os.Mkdir(outputDir, os.ModePerm)
 	if err != nil {
 		log.Fatalf("Error: could not create output directory. Reason: %s", err)
 	}
