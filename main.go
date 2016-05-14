@@ -110,12 +110,18 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 				continue
 			}
 
-			shutil.CopyTree(filepath.Join(inputDir, fi.Name()), filepath.Join(outputDir, fi.Name()), copyOptions)
+			err = shutil.CopyTree(filepath.Join(inputDir, fi.Name()), filepath.Join(outputDir, fi.Name()), copyOptions)
+			if err != nil {
+				log.Fatalf("Error while copying '%s' to '%s': %s", fi.Name(), outputDir, err)
+			}
 			continue
 		}
 
 		if !isWikiFile(fi.Name()) {
-			shutil.Copy(filepath.Join(inputDir, fi.Name()), outputDir, false)
+			_, err = shutil.Copy(filepath.Join(inputDir, fi.Name()), outputDir, false)
+			if err != nil {
+				log.Fatalf("Error while copying '%s', to '%s': %s", fi.Name(), outputDir, err)
+			}
 			continue
 		}
 
