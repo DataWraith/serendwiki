@@ -26,6 +26,9 @@ func init() {
 	tmpl = template.Must(template.New("article").Parse(defaultTemplate))
 }
 
+// linkArticles takes the HTML output of Blackfriday and parses it to figure out
+// where text that needs to be "linkified" is.
+//
 func linkArticles(inputHTML []byte, recognizer goahocorasick.Machine, linkTable map[string]string) []byte {
 	z := html.NewTokenizer(bytes.NewReader(inputHTML))
 	result := []byte{}
@@ -68,6 +71,10 @@ func linkArticles(inputHTML []byte, recognizer goahocorasick.Machine, linkTable 
 	}
 }
 
+// processWikiFile takes the filename of an article (amongs other things),
+// converts the markdown markup into HTML, "linkifies" said HTML and then sanitizes
+// it using Bluemonday to prevent malicious Javascript and the like.
+//
 func processWikiFile(inputDir string, outputDir string, fileName string, mode os.FileMode, recognizer goahocorasick.Machine, linkTable map[string]string) {
 	contents, err := ioutil.ReadFile(filepath.Join(inputDir, fileName))
 	if err != nil {

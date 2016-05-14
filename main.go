@@ -21,6 +21,9 @@ func printUsage() {
 	fmt.Println("Usage: serendwiki <input-directory> <output-directory>")
 }
 
+// checkForErrors checks whether the input directory exists and the output
+// directory does not exist.
+//
 func checkForErrors(inputDir string, outputDir string) {
 	if _, err := os.Stat(inputDir); err != nil {
 		if os.IsNotExist(err) {
@@ -34,6 +37,12 @@ func checkForErrors(inputDir string, outputDir string) {
 	}
 }
 
+// generateLinkTable generates a map from lower-cased article title (filename)
+// to original-case article title. If we don't create this link table, the
+// resulting links will not work reliably on case-sensitive file systems.
+//
+// Behavior with two article titles that differ in case only is undefined.
+//
 func generateLinkTable(fileList []string) map[string]string {
 	result := make(map[string]string)
 
@@ -44,6 +53,10 @@ func generateLinkTable(fileList []string) map[string]string {
 	return result
 }
 
+// buildArticleMachine builds a recognizer state machine using the goahocorasick
+// library. This is necessary for performant search of article titles within the
+// article text.
+//
 func buildArticleMachine(fileList []string) goahocorasick.Machine {
 	var (
 		dict    [][]rune
@@ -61,6 +74,9 @@ func buildArticleMachine(fileList []string) goahocorasick.Machine {
 	return machine
 }
 
+// processFiles looks for wiki articles and processes them. If it finds other 
+// (non-hidden) files/directories, they are simply copied to the output directory.
+//
 func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Machine, linkTable map[string]string) int {
 	var numArticles int
 
