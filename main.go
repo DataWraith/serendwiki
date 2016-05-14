@@ -103,6 +103,7 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 				continue
 			}
 
+			// Otherwise copy the directory to outputDir verbatim
 			err = shutil.CopyTree(filepath.Join(inputDir, fi.Name()), filepath.Join(outputDir, fi.Name()), copyOptions)
 			if err != nil {
 				log.Fatalf("Error while copying '%s' to '%s': %s", fi.Name(), outputDir, err)
@@ -110,6 +111,7 @@ func processFiles(inputDir string, outputDir string, recognizer goahocorasick.Ma
 			continue
 		}
 
+		// Copy non-wiki files (e.g. *.css) verbatim
 		if !isWikiFile(fi.Name()) {
 			_, err = shutil.Copy(filepath.Join(inputDir, fi.Name()), outputDir, false)
 			if err != nil {
