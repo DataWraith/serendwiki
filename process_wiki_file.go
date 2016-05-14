@@ -135,6 +135,8 @@ func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine) []byte {
 	z := html.NewTokenizer(bytes.NewReader(inputHtml))
 	result := []byte{}
 
+	insideLinkTag := false
+
 	for {
 		tt := z.Next()
 		switch tt {
@@ -145,7 +147,25 @@ func linkArticles(inputHtml []byte, recognizer goahocorasick.Machine) []byte {
 			log.Fatalf("Error while parsing generated HTML: %s", z.Err())
 
 		case html.TextToken:
-			result = append(result, linkifyText(z.Text(), recognizer)...)
+			if !insideLinkTag {
+				result = append(result, linkifyText(z.Text(), recognizer)...)
+			} else {
+				result = append(result, z.Raw()...)
+			}
+
+		case html.StartTagToken:
+			tn, _ := z.TagName()
+			if string(tn) == "a" || string(tn) == "A" {
+				insideLinkTag = true
+			}
+			result = append(result, z.Raw()...)
+
+		case html.EndTagToken:
+			tn, _ := z.TagName()
+			if string(tn) == "a" || string(tn) == "A" {
+				insideLinkTag = false
+			}
+			result = append(result, z.Raw()...)
 
 		default:
 			result = append(result, z.Raw()...)
