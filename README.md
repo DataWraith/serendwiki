@@ -1,3 +1,6 @@
+**Status**: Abandoned. I'm still looking for something that fills this use case, 
+but I'm not willing to maintain this particular implementation anymore.
+
 # Serendwiki
 
 Serendwiki is a static site generator / wiki compiler written in
